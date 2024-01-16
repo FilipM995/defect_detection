@@ -5,7 +5,7 @@ from datetime import datetime
 
 def run_training(learning_rate, batch_size):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"./results/output_{timestamp}_lr{learning_rate}_bs{batch_size}"
+    output_path = f"/content/defect_detection/results/output_{timestamp}_lr{learning_rate}_bs{batch_size}"
 
     print(f"Running training with LR={learning_rate}, Batch Size={batch_size}...")
 
@@ -33,7 +33,7 @@ def run_training(learning_rate, batch_size):
         "--dist-trans-p",
         "2.0",
         "--shuffle-buf-size",
-        "1000",
+        "500",
         "--batch-size",
         str(batch_size),
         # "--optimizer", "adam",
@@ -60,6 +60,7 @@ def run_training(learning_rate, batch_size):
 
     # Read metrics from the output file
     with open(f"{output_path}/metrics.json", "r") as f:
+        print("Reading metrics...")
         metrics = json.load(f)
 
     return metrics
