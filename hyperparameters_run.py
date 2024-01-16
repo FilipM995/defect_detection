@@ -1,11 +1,12 @@
 import subprocess
 import json
 from datetime import datetime
+import argparse
 
 
-def run_training(learning_rate, batch_size):
+def run_training(learning_rate, batch_size, output_p):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"/content/defect_detection/results/output_{timestamp}_lr{learning_rate}_bs{batch_size}"
+    output_path = f"{output_p}/output_{timestamp}_lr{learning_rate}_bs{batch_size}"
 
     print(f"Running training with LR={learning_rate}, Batch Size={batch_size}...")
 
@@ -15,9 +16,9 @@ def run_training(learning_rate, batch_size):
         "--input-channels",
         "3",  # Modify these with your desired parameters
         "--base-path",
-        "kolektorsdd2",
+        "/kaggle/working/defect_detection/KSDD2/train",
         "--dataset-json-path",
-        "",
+        "/kaggle/working/defect_detection/KSDD2/test",
         "--train-percentage",
         "1.0",
         "--height",
@@ -25,7 +26,7 @@ def run_training(learning_rate, batch_size):
         "--width",
         "232",
         "--dil-ksize",
-        "7",
+        "15",
         "--mixed-sup-N",
         "246",
         "--dist-trans-w",
@@ -66,12 +67,20 @@ def run_training(learning_rate, batch_size):
     return metrics
 
 
-# Define hyperparameter combinations to try
-learning_rates = [0.0001, 0.001, 0.01]
-batch_sizes = [1, 16, 32]
+def main():
+    parser = argparse.ArgumentParser(description='Run training script with different hyperparameters.')
+    parser.add_argument('--output-path', required=True, type=str, help='Path to save results')
+    args = parser.parse_args()
 
-# Run training with different hyperparameters
-for lr in learning_rates:
-    for bs in batch_sizes:
-        metrics_result = run_training(lr, bs)
-        print(f"Metrics for LR={lr}, Batch Size={bs}: {metrics_result}")
+    # Define hyperparameter combinations to try
+    learning_rates = [0.0001, 0.001, 0.01]
+    batch_sizes = [1, 16, 32]
+
+    # Run training with different hyperparameters
+    for lr in learning_rates:
+        for bs in batch_sizes:
+            metrics_result = run_training(lr, bs, args.output_path)
+            print(f"Metrics for LR={lr}, Batch Size={bs}: {metrics_result}")
+
+if __name__ == '__main__':
+    main()
