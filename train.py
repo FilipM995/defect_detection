@@ -327,7 +327,7 @@ def main():
                 args.base_path, args.dataset_json_path, args.aug_dir
             )
     else:
-        if 'kolektorsdd2' in args.base_path.lower():
+        if 'ksdd2' in args.base_path.lower():
             train_pos, train_neg_iter, test = load_ksdd2_custom(
                 args.base_path, args.dataset_json_path, args.train_percentage
             )
