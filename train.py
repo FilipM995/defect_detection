@@ -11,11 +11,12 @@ import yaml
 from dataloaders import (
     DATALOADER_PARAMS,
     set_loader_params,
-    load_ksdd,
-    load_ksdd2,
-    load_ksdd_tl,
-    load_ksdd2_tl,
-    load_ksdd2_aug,
+    load_ksdd2_custom,
+    # load_ksdd,
+    # load_ksdd2,
+    # load_ksdd_tl,
+    # load_ksdd2_tl,
+    # load_ksdd2_aug,
 )
 from models import (
     create_models,
@@ -78,7 +79,6 @@ def train_loop(
         start_time = time()
         Lambda = 1.0 - epoch / epochs
         for img, mask, segw, lbl, gamma in train_pos:
-            print(img.shape)
             train_step(
                 seg_model,
                 clf_model,
@@ -314,7 +314,7 @@ def main():
             )
     else:
         if 'kolektorsdd2' in args.base_path.lower():
-            train_pos, train_neg_iter, test = load_ksdd2(
+            train_pos, train_neg_iter, test = load_ksdd2_custom(
                 args.base_path, args.dataset_json_path, args.train_percentage
             )
         else:
@@ -364,16 +364,16 @@ def main():
         )
 
     if args.optimizer == 'adam':
-        optimizer = tf.keras.optimizers.Adam(lr)
+        optimizer = tf.keras.optimizers.legacy.Adam(lr)
     elif args.optimizer == 'nadam':
         if args.learning_decay:
-            optimizer = tf.keras.optimizers.Nadam(
+            optimizer = tf.keras.optimizers.legacy.Nadam(
                 lr, schedule_decay=lr / 200.0
             )
         else:
-            optimizer = tf.keras.optimizers.Nadam(lr)
+            optimizer = tf.keras.optimizers.legacy.Nadam(lr)
     elif args.optimizer == 'rmsprop':
-        optimizer = tf.keras.optimizers.RMSprop(lr)
+        optimizer = tf.keras.optimizers.legacy.RMSprop(lr)
     else:
         optimizer = get_optimizer(args.learning_rate)
 
