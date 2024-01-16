@@ -434,15 +434,19 @@ def load_ksdd2_custom(base_path, dataset_json_path, train_percentage=1.0):
     train_folder = "./datasets/KSDD2/train"
     test_folder = "./datasets/KSDD2/test"
 
-    train_files = os.listdir(train_folder)
-    test_files = os.listdir(test_folder)
+    train_files = sorted(os.listdir(train_folder))
+    test_files = sorted(os.listdir(test_folder))
+
 
     train_paths = [
-        (train_files[i], train_files[i + 1])
+        (
+            f"{train_folder}/{train_files[i]}",
+            f"{train_folder}/{train_files[i + 1]}",
+        )
         for i in range(0, len(train_files), 2)
     ]
     test_paths = [
-        (test_files[i], test_files[i + 1])
+        (f"{test_folder}/{test_files[i]}", f"{test_folder}/{test_files[i + 1]}")
         for i in range(0, len(test_files), 2)
     ]
 
