@@ -62,6 +62,8 @@ def train_step(
     optimizer.apply_gradients(zip(seg_grad, seg_model.trainable_variables))
     optimizer.apply_gradients(zip(clf_grad, clf_model.trainable_variables))
 
+    return seg_loss/Lambda, clf_loss/(1-Lambda)
+
 
 def train_loop(
     train_pos,
@@ -78,8 +80,10 @@ def train_loop(
     for epoch in range(1, epochs + 1):
         start_time = time()
         Lambda = 1.0 - epoch / epochs
+        avg_clf_loss_epoch = tf.keras.metrics.Mean()
+        avg_seg_loss_epoch = tf.keras.metrics.Mean()
         for img, mask, segw, lbl, gamma in train_pos:
-            train_step(
+            seg_loss, clf_loss = train_step(
                 seg_model,
                 clf_model,
                 optimizer,
@@ -91,8 +95,10 @@ def train_loop(
                 delta,
                 Lambda,
             )
+            avg_seg_loss_epoch.update_state(seg_loss)
+            avg_clf_loss_epoch.update_state(clf_loss)
             _img, _mask, _segw, _lbl, _gamma = train_neg_iter.get_next()
-            train_step(
+            seg_loss, clf_loss = train_step(
                 seg_model,
                 clf_model,
                 optimizer,
@@ -104,8 +110,16 @@ def train_loop(
                 delta,
                 Lambda,
             )
+            avg_seg_loss_epoch.update_state(seg_loss)
+            avg_clf_loss_epoch.update_state(clf_loss)
         end_time = time()
         print(f'Epoch: {epoch}, Training time: {end_time - start_time}')
+        avg_seg_loss_value = float(avg_seg_loss_epoch.result().numpy())
+        avg_clf_loss_value = float(avg_clf_loss_epoch.result().numpy())
+        
+        print(f'Average Segmentation Loss: {avg_seg_loss_value:.2f}')
+        print(f'Average Classification Loss: {avg_clf_loss_value:.2f}')
+        print(f'Returning seg_loss_weight {Lambda:.2f} and dec_loss_weight {1-Lambda:.2f}')
         if epoch % log_interval == 0:
             metrics = compute_metrics(test, seg_model, clf_model)
             print(f'Metrics: {metrics}')
