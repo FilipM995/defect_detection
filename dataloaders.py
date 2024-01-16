@@ -419,7 +419,7 @@ def take_N(img, mask, segw, lbl, n, N):
 #     return train_pos, train_neg_iter, test
 
 
-def load_ksdd2_custom(base_path, dataset_json_path, train_percentage=1.0):
+def load_ksdd2_custom(train_folder, test_folder, train_percentage=1.0):
     # dtd = DTDatasetCustom(name='input_dataset', operatingMode='memory')
     # dtd.load_from_json(dataset_json_path, element_list=['imagesWithMasks'])
 
@@ -430,9 +430,6 @@ def load_ksdd2_custom(base_path, dataset_json_path, train_percentage=1.0):
     #     )
     #     for key, val in dtd.imagesWithMasks.items()
     # ]
-
-    train_folder = "./KSDD2/train"
-    test_folder = "./KSDD2/test"
 
     train_files = sorted(os.listdir(train_folder))
     test_files = sorted(os.listdir(test_folder))
