@@ -431,8 +431,8 @@ def load_ksdd2_custom(base_path, dataset_json_path, train_percentage=1.0):
     #     for key, val in dtd.imagesWithMasks.items()
     # ]
 
-    train_folder = "./datasets/KSDD2/train"
-    test_folder = "./datasets/KSDD2/test"
+    train_folder = "./KSDD2/train"
+    test_folder = "./KSDD2/test"
 
     train_files = sorted(os.listdir(train_folder))
     test_files = sorted(os.listdir(test_folder))
