@@ -106,10 +106,6 @@ def parse_element(e):
     return img, mask, segw, lbl
 
 
-_n = tf.Variable(0, dtype=tf.int32)
-_N = tf.Variable(DATALOADER_PARAMS['mixed_sup_N'], dtype=tf.int32)
-
-
 def take_N(img, mask, segw, lbl, n, N):
     def _true_fn():
         n.assign_add(1)
@@ -479,6 +475,9 @@ def load_ksdd2_custom(train_folder, test_folder, train_percentage=1.0):
     train_pos = train.filter(
         lambda img, mask, segw, lbl: tf.reduce_max(lbl) == 1.0
     )
+
+    _n = tf.Variable(0, dtype=tf.int32)
+    _N = tf.Variable(DATALOADER_PARAMS['mixed_sup_N'], dtype=tf.int32)
     train_pos = train_pos.map(
         lambda img, mask, segw, lbl: take_N(img, mask, segw, lbl, _n, _N)
     )
