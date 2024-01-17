@@ -45,7 +45,7 @@ def compute_loss(
 
     return tf.reduce_mean(Lambda * gamma * Lseg), tf.reduce_mean(
         (1 - Lambda) * delta * Lclf
-    )
+    ), Lseg, Lclf
 
 
 @tf.function(experimental_relax_shapes=True)
@@ -53,7 +53,7 @@ def train_step(
     seg_model, clf_model, optimizer, img, mask, segw, lbl, gamma, delta, Lambda
 ):
     with tf.GradientTape() as seg_tape, tf.GradientTape() as clf_tape:
-        seg_loss, clf_loss = compute_loss(
+        seg_loss, clf_loss,Lseg,Lclf = compute_loss(
             seg_model, clf_model, img, mask, segw, lbl, gamma, delta, Lambda
         )
 
@@ -63,7 +63,7 @@ def train_step(
     optimizer.apply_gradients(zip(seg_grad, seg_model.trainable_variables))
     optimizer.apply_gradients(zip(clf_grad, clf_model.trainable_variables))
 
-    return seg_loss/Lambda, clf_loss/(1-Lambda)
+    return Lseg,Lclf
 
 
 def train_loop(
@@ -78,6 +78,12 @@ def train_loop(
     log_interval,
     test_on_cpu,
 ):
+    seg_losses_per_epoch = []
+    clf_losses_per_epoch = []
+
+    seg_AP_per_epoch = []
+    clf_AP_per_epoch = []
+
     for epoch in range(1, epochs + 1):
         start_time = time()
         Lambda = 1.0 - epoch / epochs
@@ -117,12 +123,17 @@ def train_loop(
         print(f'Epoch: {epoch}, Training time: {end_time - start_time}')
         avg_seg_loss_value = float(avg_seg_loss_epoch.result().numpy())
         avg_clf_loss_value = float(avg_clf_loss_epoch.result().numpy())
+
+        seg_losses_per_epoch.append(avg_seg_loss_value)
+        clf_losses_per_epoch.append(avg_clf_loss_value)
         
         print(f'Average Segmentation Loss: {avg_seg_loss_value:.2f}')
         print(f'Average Classification Loss: {avg_clf_loss_value:.2f}')
         print(f'Returning seg_loss_weight {Lambda:.2f} and dec_loss_weight {1-Lambda:.2f}')
         if epoch % log_interval == 0:
             metrics = compute_metrics(test, seg_model, clf_model)
+            seg_AP_per_epoch.append(metrics['AP_seg'])
+            clf_AP_per_epoch.append(metrics['AP_clf'])
             print(f'Metrics: {metrics}')
         print('-' * 50)
     if test_on_cpu:
@@ -131,7 +142,7 @@ def train_loop(
     else:
         with tf.device("gpu:0"):
             metrics = compute_metrics(test, seg_model, clf_model)
-    return metrics
+    return metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch
 
 
 def cli():
@@ -397,7 +408,7 @@ def main():
     else:
         optimizer = get_optimizer(args.learning_rate)
 
-    metrics = train_loop(
+    metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch = train_loop(
         train_pos,
         train_neg_iter,
         test,
@@ -413,7 +424,12 @@ def main():
     seg_model.save(os.path.join(output_path, 'seg_model.h5'))
     clf_model.save(os.path.join(output_path, 'clf_model.h5'))
 
-    data={"learning_rate": args.learning_rate, "batch_size": args.batch_size}
+    data={"learning_rate": args.learning_rate, 
+    "batch_size": args.batch_size,
+    "seg_losses" :seg_losses_per_epoch, 
+    "clf_losses" :clf_losses_per_epoch, 
+    "seg_AP_list" :seg_AP_per_epoch, 
+    "clf_AP_list" :clf_AP_per_epoch}
     metrics.update(data)
 
     if args.output_path is not None:
