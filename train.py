@@ -303,6 +303,7 @@ def main():
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = f"{args.output_path}/output_{timestamp}_lr{args.learning_rate}_bs{args.batch_size}"
+    print(f"Running training with LR={args.learning_rate}, Batch Size={args.batch_size}...")
 
     set_loader_params(
         height=args.height,
@@ -412,6 +413,8 @@ def main():
     seg_model.save(os.path.join(output_path, 'seg_model.h5'))
     clf_model.save(os.path.join(output_path, 'clf_model.h5'))
 
+    data={"learning_rate": args.learning_rate, "batch_size": args.batch_size, "metrics": metrics}
+    metrics.update(data)
 
     if args.output_path is not None:
         with open(os.path.join(output_path, 'metrics.json'), 'w') as f:
