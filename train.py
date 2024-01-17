@@ -413,7 +413,7 @@ def main():
     seg_model.save(os.path.join(output_path, 'seg_model.h5'))
     clf_model.save(os.path.join(output_path, 'clf_model.h5'))
 
-    data={"learning_rate": args.learning_rate, "batch_size": args.batch_size, "metrics": metrics}
+    data={"learning_rate": args.learning_rate, "batch_size": args.batch_size}
     metrics.update(data)
 
     if args.output_path is not None:
