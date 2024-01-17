@@ -7,6 +7,7 @@ import argparse
 import os
 import json
 import yaml
+from datetime import datetime
 
 from dataloaders import (
     DATALOADER_PARAMS,
@@ -297,7 +298,11 @@ def cli():
 
 
 def main():
+    
     args = cli().parse_args()
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = f"{args.output_path}/output_{timestamp}_lr{args.learning_rate}_bs{args.batch_size}"
 
     set_loader_params(
         height=args.height,
@@ -404,11 +409,12 @@ def main():
         args.test_on_cpu,
     )
 
-    seg_model.save(os.path.join(args.output_path, 'seg_model.h5'))
-    clf_model.save(os.path.join(args.output_path, 'clf_model.h5'))
+    seg_model.save(os.path.join(output_path, 'seg_model.h5'))
+    clf_model.save(os.path.join(output_path, 'clf_model.h5'))
+
 
     if args.output_path is not None:
-        with open(os.path.join(args.output_path, 'metrics.json'), 'w') as f:
+        with open(os.path.join(output_path, 'metrics.json'), 'w') as f:
             json.dump(metrics, f, indent=2)
 
 
