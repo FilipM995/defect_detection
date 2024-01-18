@@ -45,7 +45,7 @@ def compute_loss(
 
     return tf.reduce_mean(Lambda * gamma * Lseg), tf.reduce_mean(
         (1 - Lambda) * delta * Lclf
-    ), Lseg, Lclf
+    ), tf.reduce_mean(Lseg), tf.reduce_mean(Lclf)
 
 
 @tf.function(experimental_relax_shapes=True)
