@@ -84,6 +84,9 @@ def train_loop(
     seg_AP_per_epoch = []
     clf_AP_per_epoch = []
 
+    Lseg_list = []
+    Lclf_list = []
+
     for epoch in range(1, epochs + 1):
         start_time = time()
         Lambda = 1.0 - epoch / epochs
@@ -134,6 +137,8 @@ def train_loop(
             metrics = compute_metrics(test, seg_model, clf_model)
             seg_AP_per_epoch.append(metrics['AP_seg'])
             clf_AP_per_epoch.append(metrics['AP_clf'])
+            Lseg_list.append(metrics['Lseg'])
+            Lclf_list.append(metrics['Lclf'])
             print(f'Metrics: {metrics}')
         print('-' * 50)
     if test_on_cpu:
@@ -429,7 +434,10 @@ def main():
     "seg_losses" :seg_losses_per_epoch, 
     "clf_losses" :clf_losses_per_epoch, 
     "seg_AP_list" :seg_AP_per_epoch, 
-    "clf_AP_list" :clf_AP_per_epoch}
+    "clf_AP_list" :clf_AP_per_epoch,
+    "Lseg_list" :Lseg_list, 
+    "Lclf_list" :Lclf_list,
+    }
     metrics.update(data)
 
     if args.output_path is not None:
