@@ -147,7 +147,7 @@ def train_loop(
     else:
         with tf.device("gpu:0"):
             metrics = compute_metrics(test, seg_model, clf_model)
-    return metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch
+    return metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch, lseg_list, lclf_list
 
 
 def cli():
@@ -413,7 +413,7 @@ def main():
     else:
         optimizer = get_optimizer(args.learning_rate)
 
-    metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch = train_loop(
+    metrics, seg_losses_per_epoch, clf_losses_per_epoch, seg_AP_per_epoch, clf_AP_per_epoch, lseg_list, lclf_list = train_loop(
         train_pos,
         train_neg_iter,
         test,
