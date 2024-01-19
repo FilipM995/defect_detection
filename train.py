@@ -431,6 +431,7 @@ def main():
 
     data={"learning_rate": args.learning_rate, 
     "batch_size": args.batch_size,
+    "N_mix_sup": args.mixed_sup_N,
     "seg_losses" :seg_losses_per_epoch, 
     "clf_losses" :clf_losses_per_epoch, 
     "seg_AP_list" :seg_AP_per_epoch, 
