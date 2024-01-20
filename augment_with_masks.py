@@ -46,8 +46,8 @@ def augment_images_and_masks(input_folder, output_folder, num_augmented_images):
         cv2.imwrite(os.path.join(output_folder, it[i+1]), transformed_mask)
 
 if __name__ == "__main__":
-    input_folder = "annotations/images_and_masks"
-    output_folder = "kolektorsdd2/train_augmented"
+    input_folder = "/kaggle/working/defect_detection/images_and_masks"
+    output_folder = "/kaggle/working/defect_detection/KSDD2/train_augmented"
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
