@@ -32,6 +32,7 @@ def set_loader_params(
     dist_trans_p=2.0,
     shuffle_buf_size=500,
     batch_size=1,
+    to_grayscale=False,
 ):
     DATALOADER_PARAMS['height'] = height
     DATALOADER_PARAMS['width'] = width
@@ -41,6 +42,8 @@ def set_loader_params(
     DATALOADER_PARAMS['mixed_sup_N'] = mixed_sup_N
     DATALOADER_PARAMS['shuffle_buf_size'] = shuffle_buf_size
     DATALOADER_PARAMS['batch_size'] = batch_size
+    DATALOADER_PARAMS['to_grayscale'] = to_grayscale
+
 
 
 def parse_element(e):
@@ -285,66 +288,84 @@ def take_N(img, mask, segw, lbl, n, N):
 #     return train_pos, train_neg_iter, test
 
 
-# def load_ksdd2_tl(base_path, dataset_json_path, num_images):
-#     dtd = DTDatasetCustom(name='input_dataset', operatingMode='memory')
-#     dtd.load_from_json(dataset_json_path, element_list=['imagesWithMasks'])
+def load_ksdd2_tl(train_folder, test_folder, num_images):
+    # dtd = DTDatasetCustom(name='input_dataset', operatingMode='memory')
+    # dtd.load_from_json(dataset_json_path, element_list=['imagesWithMasks'])
 
-#     paths = [
-#         (
-#             os.path.join(base_path, val.imgPath),
-#             os.path.join(base_path, val.maskPath),
-#         )
-#         for key, val in dtd.imagesWithMasks.items()
-#     ]
+    # paths = [
+    #     (
+    #         os.path.join(base_path, val.imgPath),
+    #         os.path.join(base_path, val.maskPath),
+    #     )
+    #     for key, val in dtd.imagesWithMasks.items()
+    # ]
 
-#     train_paths = [
-#         (img_path, mask_path)
-#         for img_path, mask_path in paths
-#         if 'train' in img_path.lower()
-#     ]
-#     test_paths = [
-#         (img_path, mask_path)
-#         for img_path, mask_path in paths
-#         if 'test' in img_path.lower()
-#     ]
+    # train_paths = [
+    #     (img_path, mask_path)
+    #     for img_path, mask_path in paths
+    #     if 'train' in img_path.lower()
+    # ]
+    # test_paths = [
+    #     (img_path, mask_path)
+    #     for img_path, mask_path in paths
+    #     if 'test' in img_path.lower()
+    # ]
 
-#     train = tf.data.Dataset.from_tensor_slices(train_paths[:num_images])
-#     test = tf.data.Dataset.from_tensor_slices(test_paths)
+    train_files = sorted(os.listdir(train_folder))
+    test_files = sorted(os.listdir(test_folder))
 
-#     DATALOADER_PARAMS['to_grayscale'] = True
 
-#     train = train.map(parse_element)
-#     train_neg = train.filter(
-#         lambda img, mask, segw, lbl: tf.reduce_max(lbl) == 0.0
-#     )
-#     train_neg = train_neg.map(
-#         lambda img, mask, segw, lbl: (img, mask, segw, lbl, 1.0)
-#     )
-#     train_neg = (
-#         train_neg.shuffle(DATALOADER_PARAMS['shuffle_buf_size'])
-#         .batch(DATALOADER_PARAMS['batch_size'])
-#         .cache()
-#         .repeat()
-#         .prefetch(1)
-#     )
-#     train_neg_iter = iter(train_neg)
-#     train_pos = train.filter(
-#         lambda img, mask, segw, lbl: tf.reduce_max(lbl) == 1.0
-#     )
-#     train_pos = train_pos.map(
-#         lambda img, mask, segw, lbl: take_N(img, mask, segw, lbl, _n, _N)
-#     )
-#     train_pos = (
-#         train_pos.shuffle(DATALOADER_PARAMS['shuffle_buf_size'])
-#         .batch(DATALOADER_PARAMS['batch_size'])
-#         .cache()
-#         .prefetch(1)
-#     )
+    train_paths = [
+        (
+            f"{train_folder}/{train_files[i]}",
+            f"{train_folder}/{train_files[i + 1]}",
+        )
+        for i in range(0, len(train_files), 2)
+    ]
+    test_paths = [
+        (f"{test_folder}/{test_files[i]}", f"{test_folder}/{test_files[i + 1]}")
+        for i in range(0, len(test_files), 2)
+    ]
 
-#     test = test.map(parse_element)
-#     test = test.batch(DATALOADER_PARAMS['batch_size']).cache().prefetch(1)
+    train = tf.data.Dataset.from_tensor_slices(train_paths[:num_images])
+    test = tf.data.Dataset.from_tensor_slices(test_paths)
 
-#     return train_pos, train_neg_iter, test
+    DATALOADER_PARAMS['to_grayscale'] = True
+
+    train = train.map(parse_element)
+    train_neg = train.filter(
+        lambda img, mask, segw, lbl: tf.reduce_max(lbl) == 0.0
+    )
+    train_neg = train_neg.map(
+        lambda img, mask, segw, lbl: (img, mask, segw, lbl, 1.0)
+    )
+    train_neg = (
+        train_neg.shuffle(DATALOADER_PARAMS['shuffle_buf_size'])
+        .batch(DATALOADER_PARAMS['batch_size'])
+        .cache()
+        .repeat()
+        .prefetch(1)
+    )
+    train_neg_iter = iter(train_neg)
+    train_pos = train.filter(
+        lambda img, mask, segw, lbl: tf.reduce_max(lbl) == 1.0
+    )
+    _n = tf.Variable(0, dtype=tf.int32)
+    _N = tf.Variable(DATALOADER_PARAMS['mixed_sup_N'], dtype=tf.int32)
+    train_pos = train_pos.map(
+        lambda img, mask, segw, lbl: take_N(img, mask, segw, lbl, _n, _N)
+    )
+    train_pos = (
+        train_pos.shuffle(DATALOADER_PARAMS['shuffle_buf_size'])
+        .batch(DATALOADER_PARAMS['batch_size'])
+        .cache()
+        .prefetch(1)
+    )
+
+    test = test.map(parse_element)
+    test = test.batch(DATALOADER_PARAMS['batch_size']).cache().prefetch(1)
+
+    return train_pos, train_neg_iter, test
 
 
 # def load_ksdd2_aug(base_path, dataset_json_path, aug_dir):
