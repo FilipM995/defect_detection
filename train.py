@@ -16,7 +16,7 @@ from dataloaders import (
     # load_ksdd,
     # load_ksdd2,
     # load_ksdd_tl,
-    # load_ksdd2_tl,
+    load_ksdd2_tl,
     # load_ksdd2_aug,
 )
 from models import (
@@ -225,6 +225,9 @@ def cli():
         '--batch-size', required=True, type=int, help='Batch size'
     )
     parser.add_argument(
+        '--to-grayscale', required=True, type=bool, help='Grayscale'
+    )
+    parser.add_argument(
         '--optimizer',
         required=False,
         type=str,
@@ -330,6 +333,7 @@ def main():
         dist_trans_p=args.dist_trans_p,
         shuffle_buf_size=args.shuffle_buf_size,
         batch_size=args.batch_size,
+        to_grayscale=args.to_grayscale,
     )
 
     if args.tl_num_images is not None:
